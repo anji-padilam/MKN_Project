@@ -83,7 +83,7 @@ export const DynamicDataProvider: React.FC<DynamicDataProviderProps> = ({ childr
     refetch: refreshLanguages
   } = useQuery({
     queryKey: ['languages'],
-    queryFn: () => fetchAndCacheData<Language>('/api/languages', {}, 'languages'),
+    queryFn: () => fetchAndCacheData<Language>('/api/data', { type: 'languages' }, 'languages'),
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     cacheTime: 24 * 60 * 60 * 1000, // 24 hours
   });
@@ -96,22 +96,26 @@ export const DynamicDataProvider: React.FC<DynamicDataProviderProps> = ({ childr
     refetch: refreshStates
   } = useQuery({
     queryKey: ['states', selectedLanguage?.id],
-    queryFn: () => fetchAndCacheData<State>('/api/states', { language_id: selectedLanguage?.id }, 'states'),
+    queryFn: () => fetchAndCacheData<State>('/api/data', { type: 'states', language_id: selectedLanguage?.id }, 'states'),
     enabled: !!selectedLanguage?.id,
     staleTime: 24 * 60 * 60 * 1000,
     cacheTime: 24 * 60 * 60 * 1000,
   });
 
-  // Districts query - depends on selectedState
+  // Districts query - depends on selectedLanguage and selectedState
   const {
     data: districts = [],
     isLoading: loadingDistricts,
     error: errorDistricts,
     refetch: refreshDistricts
   } = useQuery({
-    queryKey: ['districts', selectedState?.id],
-    queryFn: () => fetchAndCacheData<District>('/api/districts', { state_id: selectedState?.id }, 'districts'),
-    enabled: !!selectedState?.id,
+    queryKey: ['districts', selectedLanguage?.id, selectedState?.id],
+    queryFn: () => fetchAndCacheData<District>('/api/data', { 
+      type: 'districts', 
+      language_id: selectedLanguage?.id,
+      state_id: selectedState?.id 
+    }, 'districts'),
+    enabled: !!selectedLanguage?.id && !!selectedState?.id,
     staleTime: 24 * 60 * 60 * 1000,
     cacheTime: 24 * 60 * 60 * 1000,
   });
@@ -124,7 +128,7 @@ export const DynamicDataProvider: React.FC<DynamicDataProviderProps> = ({ childr
     refetch: refreshCategories
   } = useQuery({
     queryKey: ['categories', selectedLanguage?.id],
-    queryFn: () => fetchAndCacheData<Category>('/api/categories', { language_id: selectedLanguage?.id }, 'categories'),
+    queryFn: () => fetchAndCacheData<Category>('/api/data', { type: 'categories', language_id: selectedLanguage?.id }, 'categories'),
     enabled: !!selectedLanguage?.id,
     staleTime: 24 * 60 * 60 * 1000,
     cacheTime: 24 * 60 * 60 * 1000,

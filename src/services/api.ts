@@ -351,7 +351,7 @@ export const apiService = {
   async getLanguages(): Promise<Language[]> {
     try {
       const response = await retryRequest(async () => 
-        await apiClient.get<ApiResponse<Language[]>>('/news/languages')
+        await apiClient.get<ApiResponse<Language[]>>('/data?type=languages')
       );
       return response.data.result || [];
     } catch (error: any) {
@@ -362,10 +362,10 @@ export const apiService = {
   },
 
   // 2. News Categories Dropdown
-  async getNewsCategories(): Promise<NewsCategory[]> {
+  async getNewsCategories(language_id: string): Promise<NewsCategory[]> {
     try {
       const response = await retryRequest(async () => 
-        await apiClient.get<ApiResponse<NewsCategory[]>>('/news/categories')
+        await apiClient.get<ApiResponse<NewsCategory[]>>(`/data?type=categories&language_id=${language_id}`)
       );
       return response.data.result || [];
     } catch (error: any) {
@@ -379,9 +379,9 @@ export const apiService = {
   async getStates(language_id: string): Promise<State[]> {
     try {
       const response = await retryRequest(async () =>
-        await apiClient.get<StatesApiResponse>(`/news/states?language_id=${language_id}`)
+        await apiClient.get<StatesApiResponse>(`/data?type=states&language_id=${language_id}`)
       );
-      const items = response.data.result?.items || [];
+      const items = response.data.result?.items || response.data.result || [];
       return items.map((s: StateApiItem) => ({
         id: s.id,
         stateName: s.name,
@@ -397,10 +397,10 @@ export const apiService = {
   },
 
   // 4. Districts List
-  async getDistricts(state_id: string): Promise<District[]> {
+  async getDistricts(language_id: string): Promise<District[]> {
     try {
       const response = await retryRequest(async () => 
-        await apiClient.get<ApiResponse<District[]>>(`/news/districts?state_id=${state_id}`)
+        await apiClient.get<ApiResponse<District[]>>(`/data?type=districts&language_id=${language_id}`)
       );
       return response.data.result?.filter(district => district.isDeleted !== 1) || [];
     } catch (error: any) {

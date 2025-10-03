@@ -120,17 +120,22 @@ const SportsSection = () => {
               <div className="space-y-4 sm:space-y-6 mt-6 sm:mt-8 w-full">
                 {[...Array(2)].map((_, i) => (
                   <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div className="flex flex-col sm:flex-row">
-                      <div className="w-full sm:w-2/5 h-48 sm:h-56 md:h-64 lg:h-72 bg-gray-200 animate-pulse"></div>
-                      <div className="w-full sm:w-3/5 p-3 sm:p-4 md:p-6">
-                        <div className="flex flex-col sm:flex-row sm:justify-between gap-2 sm:gap-0 mb-3">
-                          <div className="h-5 sm:h-6 w-20 bg-gray-200 rounded animate-pulse"></div>
-                          <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="flex flex-col sm:flex-row h-full">
+                      <div className="w-full sm:w-2/5 h-48 sm:h-44 md:h-48 lg:h-52 xl:h-56 bg-gray-200 animate-pulse flex-shrink-0"></div>
+                      <div className="w-full sm:w-3/5 flex flex-col justify-between p-3 sm:p-4 md:p-6">
+                        <div className="flex-1">
+                          <div className="flex flex-row items-center justify-between gap-2 mb-3">
+                            <div className="h-5 w-20 bg-gray-200 rounded-full animate-pulse"></div>
+                            <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+                          </div>
+                          <div className="h-6 sm:h-8 bg-gray-200 rounded animate-pulse mb-3"></div>
                         </div>
-                        <div className="h-6 sm:h-8 bg-gray-200 rounded animate-pulse mb-3 sm:mb-4"></div>
-                        <div className="space-y-2">
-                          <div className="h-3 sm:h-4 bg-gray-200 rounded animate-pulse"></div>
-                          <div className="h-3 sm:h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                        <div className="mt-auto">
+                          <div className="space-y-2">
+                            <div className="h-3 sm:h-4 bg-gray-200 rounded animate-pulse"></div>
+                            <div className="h-3 sm:h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+                            <div className="h-3 sm:h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -145,9 +150,9 @@ const SportsSection = () => {
           ) : (
             <div className="space-y-4 sm:space-y-6">
               {sportsNews.map((news) => {
-                const imageUrl = news.media && news.media.length > 0
+                const imageUrl = news.media && news.media.length > 0 && news.media[0].mediaUrl
                   ? news.media[0].mediaUrl
-                  : "/lovable-uploads/Sports12.png";
+                  : "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=400&fit=crop&crop=center";
                 const summary = news.shortNewsContent || t("sports.noSummary");
                 const category = news.categoryName || t("sports.defaultCategory");
                 const time = new Date(news.createdAt).toLocaleDateString("en-IN", {
@@ -159,20 +164,20 @@ const SportsSection = () => {
                 return (
                   <Card
                     key={news.id}
-                    className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+                    className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 h-full"
                     onClick={() => handleCardClick(news.id)}
                   >
                     <div className="flex flex-col sm:flex-row h-full">
                       {/* Image */}
-                      <div className="w-full sm:w-2/5 h-48 sm:h-56 md:h-64 lg:h-72 xl:h-80 flex-shrink-0 relative">
+                      <div className="w-full sm:w-2/5 h-48 sm:h-44 md:h-48 lg:h-52 xl:h-56 flex-shrink-0 relative overflow-hidden">
                         <img
                           src={imageUrl}
                           alt={news.title}
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                          className="w-full h-full object-cover object-center transition-transform duration-300 hover:scale-105"
                           loading="lazy"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = "/lovable-uploads/Sports12.png";
+                            target.src = "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=400&fit=crop&crop=center";
                             target.onerror = null; // Prevent infinite loop
                           }}
                         />
@@ -180,9 +185,9 @@ const SportsSection = () => {
                       </div>
 
                       {/* Text Content */}
-                      <div className="w-full sm:w-3/5 flex flex-col justify-between p-3 sm:p-4 md:p-6">
-                        <div>
-                          <div className="flex flex-row items-center justify-between gap-2 mb-3">
+                      <div className="w-full sm:w-3/5 flex flex-col justify-between p-3 sm:p-4 md:p-6 min-h-0">
+                        <div className="flex-1 flex flex-col">
+                          <div className="flex flex-row items-center justify-between gap-2 mb-2 sm:mb-3">
                             <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium w-fit">
                               {category}
                             </span>
@@ -191,12 +196,10 @@ const SportsSection = () => {
                               <span className="truncate">{time}</span>
                             </div>
                           </div>
-                          <CardTitle className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-3 line-clamp-2">
+                          <CardTitle className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-gray-900 mb-2 line-clamp-2 leading-tight">
                             {news.title}
                           </CardTitle>
-                        </div>
-                        <div>
-                          <p className="text-gray-600 text-xs sm:text-sm md:text-base line-clamp-3">
+                          <p className="text-gray-600 text-xs sm:text-sm md:text-base line-clamp-2 sm:line-clamp-3 leading-relaxed flex-1">
                             {summary}
                           </p>
                         </div>

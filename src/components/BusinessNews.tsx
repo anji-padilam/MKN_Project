@@ -159,12 +159,12 @@ const BusinessNews = () => {
         {error && <p className="text-center text-red-500">{error}</p>}
 
         {/* Business News */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-4 sm:gap-6">
           {businessNews.map((news: any) => {
             const imageUrl =
-              news.media?.length > 0
+              news.media?.length > 0 && news.media[0].mediaUrl
                 ? news.media[0].mediaUrl
-                : "https://via.placeholder.com/400x280?text=No+Image";
+                : "https://via.placeholder.com/600x400?text=Business+News";
             const summary =
               news.shortNewsContent || news.excerpt || t("noSummary");
             const category = news.categoryName || t("business");
@@ -175,22 +175,28 @@ const BusinessNews = () => {
             return (
               <Card
                 key={news.id}
-                className="overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer flex flex-col sm:flex-row lg:flex-col xl:flex-row"
+                className="overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer flex flex-col sm:flex-row lg:flex-row xl:flex-row"
                 onClick={() => handleCardClick(news.id)}
               >
                 {/* Image */}
-                <div className="sm:w-[45%] lg:w-full xl:w-[45%] h-48 sm:h-40 lg:h-48 xl:h-40 flex-shrink-0">
+                <div className="sm:w-[45%] lg:w-[45%] xl:w-[45%] h-56 sm:h-48 lg:h-52 xl:h-56 flex-shrink-0">
                   <img
                     src={imageUrl}
                     alt={news.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    loading="lazy"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "https://via.placeholder.com/600x400?text=Business+News";
+                      target.onerror = null; // Prevent infinite loop
+                    }}
                   />
                 </div>
 
                 {/* Text Content */}
-                <div className="sm:w-[55%] lg:w-full xl:w-[55%] flex flex-col justify-between p-3 sm:p-4 h-auto sm:h-40 lg:h-auto xl:h-40">
-                  <CardHeader className="p-0 pb-2">
-                    <div className="flex flex-row items-center justify-between gap-2">
+                <div className="sm:w-[55%] lg:w-[55%] xl:w-[55%] flex flex-col justify-between p-3 sm:p-4 md:p-5 h-auto sm:h-48 lg:h-52 xl:h-56">
+                  <CardHeader className="p-0 pb-3">
+                    <div className="flex flex-row items-center justify-between gap-2 mb-3">
                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium w-fit">
                         {category}
                       </span>
@@ -199,12 +205,12 @@ const BusinessNews = () => {
                         {time}
                       </div>
                     </div>
-                    <CardTitle className="text-base sm:text-lg line-clamp-2 mt-2">
+                    <CardTitle className="text-base sm:text-lg md:text-xl line-clamp-2 leading-tight">
                       {news.title}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-0">
-                    <p className="text-gray-600 text-xs sm:text-sm line-clamp-3">
+                  <CardContent className="p-0 flex-1 flex flex-col justify-end">
+                    <p className="text-gray-600 text-xs sm:text-sm md:text-base line-clamp-3 leading-relaxed">
                       {summary}
                     </p>
                   </CardContent>

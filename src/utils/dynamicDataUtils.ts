@@ -65,17 +65,15 @@ export interface ApiResponse<T> {
 
 // Helper function to get direct API URL
 const getDirectApiUrl = (endpoint: string, params: Record<string, any>): string => {
-  const baseUrl = 'https://phpstack-1520234-5847937.cloudwaysapps.com/api/v1/news';
+  // In development, use the local Vercel functions
+  const baseUrl = '/api';
   
-  // Map our internal endpoints to the actual API endpoints
+  // Map our internal endpoints to the new consolidated API endpoints
   const endpointMap: Record<string, string> = {
-    '/api/languages': '/languages',
-    '/api/states': '/states', 
-    '/api/districts': '/districts',
-    '/api/categories': '/categories'
+    '/api/data': '/data'
   };
   
-  const actualEndpoint = endpointMap[endpoint] || endpoint;
+  const actualEndpoint = endpointMap[endpoint] || endpoint.replace('/api/', '/');
   const url = new URL(`${baseUrl}${actualEndpoint}`);
   
   Object.entries(params).forEach(([key, value]) => {
@@ -114,50 +112,12 @@ export const fetchAndCacheData = async <T>(
     }
   }
 
-  // In development mode, use direct API calls
-  const isDevelopment = import.meta.env.DEV;
-  
-  if (isDevelopment) {
-    console.log(`[DynamicData] Development mode: Using direct API for ${cacheKey}`);
-    try {
-      const directUrl = getDirectApiUrl(apiEndpoint, params);
-      console.log(`[DynamicData] Direct API URL: ${directUrl}`);
-      
-      const directResponse = await fetch(directUrl, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      
-      if (!directResponse.ok) {
-        throw new Error(`Direct API failed with status: ${directResponse.status}`);
-      }
-      
-      const directData = await directResponse.json();
-      
-      if (directData.status === 1 && Array.isArray(directData.result)) {
-        const filteredData = directData.result.filter((item: any) => 
-          item.is_deleted !== 1 && item.is_active === 1
-        );
-        
-        console.log(`[DynamicData] Fetched ${filteredData.length} ${cacheKey} from direct API`);
-        
-        // Cache the data in session storage
-        sessionStorage.setItem(fullCacheKey, JSON.stringify(filteredData));
-        sessionStorage.setItem(`${fullCacheKey}_timestamp`, new Date().getTime().toString());
-        
-        return filteredData;
-      } else {
-        throw new Error(`Invalid direct API response format for ${cacheKey}`);
-      }
-    } catch (error: any) {
-      console.error(`[DynamicData] Direct API failed for ${cacheKey}:`, error);
-      throw new Error(`Direct API failed: ${error.message}`);
-    }
-  }
+  // Always use local Vercel functions first (both development and production)
+  console.log(`[DynamicData] Using local Vercel functions for ${cacheKey}`);
 
-  // In production, try our API route first, then fallback to direct API
+  // Try our local Vercel API route first
   try {
-    console.log(`[DynamicData] Production mode: Trying API route for ${cacheKey}:`, apiEndpoint, params);
+    console.log(`[DynamicData] Trying local Vercel API for ${cacheKey}:`, apiEndpoint, params);
     
     // Try our API route first
     const response = await apiClient.get<ApiResponse<T>>(apiEndpoint, { params });
@@ -167,7 +127,7 @@ export const fetchAndCacheData = async <T>(
         item.is_deleted !== 1 && item.is_active === 1
       );
       
-      console.log(`[DynamicData] Fetched ${filteredData.length} ${cacheKey} from API route`);
+      console.log(`[DynamicData] Fetched ${filteredData.length} ${cacheKey} from local Vercel API`);
       
       // Cache the data in session storage
       sessionStorage.setItem(fullCacheKey, JSON.stringify(filteredData));
@@ -178,20 +138,40 @@ export const fetchAndCacheData = async <T>(
       throw new Error(`Invalid response format for ${cacheKey}: ${response.data.message || 'Unknown error'}`);
     }
   } catch (error: any) {
-    console.error(`[DynamicData] API route failed for ${cacheKey}, trying direct API:`, error);
+    console.error(`[DynamicData] Local Vercel API failed for ${cacheKey}, trying external API:`, error);
     
-    // Fallback to direct API call
+    // Fallback to direct external API call
     try {
-      const directUrl = getDirectApiUrl(apiEndpoint, params);
-      console.log(`[DynamicData] Trying direct API: ${directUrl}`);
+      // Map to external API endpoints based on the type parameter
+      let externalUrl = '';
+      const { type } = params;
       
-      const directResponse = await fetch(directUrl, {
+      switch (type) {
+        case 'languages':
+          externalUrl = 'https://phpstack-1520234-5847937.cloudwaysapps.com/api/v1/news/languages';
+          break;
+        case 'categories':
+          externalUrl = `https://phpstack-1520234-5847937.cloudwaysapps.com/api/v1/news/categories?language_id=${params.language_id}`;
+          break;
+        case 'states':
+          externalUrl = `https://phpstack-1520234-5847937.cloudwaysapps.com/api/v1/news/states?language_id=${params.language_id}`;
+          break;
+        case 'districts':
+          externalUrl = `https://phpstack-1520234-5847937.cloudwaysapps.com/api/v1/news/districts?language_id=${params.language_id}&state_id=${params.state_id}`;
+          break;
+        default:
+          throw new Error(`Unknown type for external API: ${type}`);
+      }
+      
+      console.log(`[DynamicData] Trying direct external API: ${externalUrl}`);
+      
+      const directResponse = await fetch(externalUrl, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
       
       if (!directResponse.ok) {
-        throw new Error(`Direct API failed with status: ${directResponse.status}`);
+        throw new Error(`Direct external API failed with status: ${directResponse.status}`);
       }
       
       const directData = await directResponse.json();
@@ -201,7 +181,7 @@ export const fetchAndCacheData = async <T>(
           item.is_deleted !== 1 && item.is_active === 1
         );
         
-        console.log(`[DynamicData] Fetched ${filteredData.length} ${cacheKey} from direct API`);
+        console.log(`[DynamicData] Fetched ${filteredData.length} ${cacheKey} from direct external API`);
         
         // Cache the data in session storage
         sessionStorage.setItem(fullCacheKey, JSON.stringify(filteredData));
@@ -209,10 +189,10 @@ export const fetchAndCacheData = async <T>(
         
         return filteredData;
       } else {
-        throw new Error(`Invalid direct API response format for ${cacheKey}`);
+        throw new Error(`Invalid direct external API response format for ${cacheKey}`);
       }
     } catch (directError: any) {
-      console.error(`[DynamicData] Direct API also failed for ${cacheKey}:`, directError);
+      console.error(`[DynamicData] Direct external API also failed for ${cacheKey}:`, directError);
       throw new Error(`Both API routes failed: ${error.message || directError.message}`);
     }
   }
