@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { type, language_id } = req.query;
+    const { type, language_id, state_id } = req.query;
 
     if (!type) {
       return res.status(400).json({ 
@@ -76,10 +76,54 @@ export default async function handler(req, res) {
         logPrefix = '[Districts API]';
         break;
       
+      case 'local-mandis':
+        apiUrl = `https://phpstack-1520234-5847937.cloudwaysapps.com/api/v1/local-mandis`;
+        logPrefix = '[Local Mandis API]';
+        break;
+      
+      case 'health-check':
+        // Health check functionality
+        const baseUrl = process.env.API_BASE_URL || 'https://phpstack-1520234-5847937.cloudwaysapps.com/api/v1';
+        const testUrl = `${baseUrl}/news/test-connection`;
+        
+        try {
+          const healthResponse = await fetch(testUrl, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'User-Agent': 'MaroKurukshetram-Web/1.0',
+              'Accept': 'application/json',
+            },
+            signal: AbortSignal.timeout(10000)
+          });
+          
+          return res.status(200).json({
+            status: 'ok',
+            externalApi: {
+              url: baseUrl,
+              reachable: healthResponse.ok,
+              status: healthResponse.status,
+              statusText: healthResponse.statusText
+            },
+            timestamp: new Date().toISOString()
+          });
+        } catch (healthError) {
+          return res.status(200).json({
+            status: 'error',
+            externalApi: {
+              url: baseUrl,
+              reachable: false,
+              error: healthError.message,
+              code: healthError.code
+            },
+            timestamp: new Date().toISOString()
+          });
+        }
+      
       default:
         return res.status(400).json({ 
           status: 0, 
-          message: 'Invalid type. Must be one of: categories, languages, states, districts',
+          message: 'Invalid type. Must be one of: categories, languages, states, districts, local-mandis, health-check',
           result: null 
         });
     }
